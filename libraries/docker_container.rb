@@ -15,6 +15,7 @@ module DockerCookbook
     property :cgroup_parent, String, default: ''
     property :cpu_shares, Integer, default: 0
     property :cpuset_cpus, String, default: ''
+    property :cpus, Integer, coerce: proc { |v| coerce_to_nanocpus(v) }, default: 0
     property :detach, [TrueClass, FalseClass], default: true, desired_state: false
     property :devices, Array, default: []
     property :dns, Array, default: []
@@ -38,6 +39,7 @@ module DockerCookbook
     property :init, [TrueClass, FalseClass, nil]
     property :ip_address, String
     property :mac_address, String
+    property :shm_size, [String, Integer], coerce: proc { |v| coerce_to_bytes(v) }, default: 67108864
     property :memory, [String, Integer], coerce: proc { |v| coerce_to_bytes(v) }, default: 0
     property :memory_swap, [String, Integer], coerce: proc { |v| coerce_to_bytes(v) }, default: 0
     property :memory_swappiness, Integer, default: 0
@@ -170,6 +172,10 @@ module DockerCookbook
       else
         to_bytes(v)
       end
+    end
+
+    def coerce_to_nanocpus(v)
+      v * 10**9
     end
 
     def coerce_log_opts(v)
@@ -511,6 +517,7 @@ module DockerCookbook
               'CgroupParent'    => new_resource.cgroup_parent,
               'CpuShares'       => new_resource.cpu_shares,
               'CpusetCpus'      => new_resource.cpuset_cpus,
+              'NanoCpus'        => new_resource.cpus,
               'Devices'         => new_resource.devices,
               'Dns'             => new_resource.dns,
               'DnsSearch'       => new_resource.dns_search,
@@ -520,6 +527,7 @@ module DockerCookbook
               'KernelMemory'    => new_resource.kernel_memory,
               'Links'           => new_resource.links,
               'LogConfig'       => log_config,
+              'ShmSize'         => new_resource.shm_size,
               'Memory'          => new_resource.memory,
               'MemorySwap'      => new_resource.memory_swap,
               'MemorySwappiness' => new_resource.memory_swappiness,
